@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>x402-svm — pitch</title>
+<style>
+  :root { color-scheme: dark; --bg:#0b0e14; --card:#121722; --line:#1e2635; --fg:#e6edf3; --dim:#8b98a9; --acc:#14f195; --acc2:#9945ff; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:18px/1.55 ui-sans-serif,system-ui; background:var(--bg); color:var(--fg); }
+  .slide { min-height:100vh; padding:8vh 10vw; display:flex; flex-direction:column; justify-content:center; border-bottom:1px solid var(--line); }
+  .slide.small { min-height:70vh; }
+  h1 { font-size:52px; margin:0 0 12px; line-height:1.1; }
+  h2 { font-size:38px; margin:0 0 24px; color:var(--acc); }
+  .k { color:var(--acc); }
+  .dim { color:var(--dim); }
+  ul { font-size:22px; line-height:1.7; }
+  .big { font-size:30px; }
+  table { border-collapse:collapse; font-size:20px; }
+  td,th { border-bottom:1px solid var(--line); padding:10px 18px 10px 0; text-align:left; }
+  .row { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px 24px; }
+  code { color:var(--acc); }
+  .grad { background:linear-gradient(90deg,var(--acc2),var(--acc)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  @media print { .slide { page-break-after: always; min-height:100vh; } }
+</style>
+</head>
+<body>
+
+<section class="slide">
+  <p class="dim">Colosseum Crypto World's Fair · Superteam Vietnam Track · Sep 2026</p>
+  <h1>x402-svm<br/><span class="grad">HTTP-native payments for the agent economy on Solana</span></h1>
+  <p class="big dim">Every API endpoint becomes a vending machine. Every agent gets a wallet.</p>
+</section>
+
+<section class="slide">
+  <h2>The problem</h2>
+  <ul>
+    <li>AI agents now <b>browse, negotiate and call tools</b> — but HTTP has no way to charge <i>machines</i> per request.</li>
+    <li>Monetization is built for humans: API keys, KYC, invoices, chargebacks.</li>
+    <li>Result: data stays behind logins, agents scrape or hallucinate, providers can't price per-call.</li>
+  </ul>
+</section>
+
+<section class="slide">
+  <h2>The insight</h2>
+  <p class="big">HTTP already has a status code for payment: <span class="k">402 Payment Required</span>. It shipped unused in 1992.</p>
+  <p class="big" style="margin-top:24px">Solana makes it real: <span class="k">~$0.00002</span> per settlement, <span class="k">~400 ms</span> finality, no allowances.</p>
+</section>
+
+<section class="slide">
+  <h2>Product</h2>
+  <div class="row">
+    <div class="card"><b>SDK (TypeScript)</b><br/><code>wrapFetchWithPayment(fetch, conn, wallet)</code><br/>one line makes any agent pay-per-request. Server helpers build terms and verify settlements on-chain.</div>
+    <div class="card"><b>Live paid API</b><br/>SOL/USD quotes at 0.001 USDC, premium research at 0.01 USDC — settled on-chain, verified from chain state, served in the same second.</div>
+  </div>
+  <ul style="margin-top:24px">
+    <li>Wire-compatible with the x402 spec; SVM adaptation documented.</li>
+    <li>No approve/allowance: direct <code>transferChecked</code>, destination derived, memo-stamped.</li>
+  </ul>
+</section>
+
+<section class="slide">
+  <h2>Demo — working today</h2>
+  <ul>
+    <li>Live paid API + agent loop: <span class="k">demo URL in submission</span></li>
+    <li>Settlement receipts: real SPL transfers, verification reads <b>chain state</b> (amount + destination + success), never client claims.</li>
+    <li>Public repo with full source, spec mapping and roadmap.</li>
+  </ul>
+  <p class="dim">402 → pay → retry → 200, in under a second.</p>
+</section>
+
+<section class="slide">
+  <h2>Why Solana wins this</h2>
+  <table>
+    <tr><th></th><th>EVM L2s</th><th class="k">Solana</th></tr>
+    <tr><td>Fee per micro-payment</td><td>$0.01–0.30 (gas spikes)</td><td class="k">≈ $0.00002</td></tr>
+    <tr><td>Confirm latency</td><td>2 s – 2 min</td><td class="k">~400 ms</td></tr>
+    <tr><td>Allowance risk</td><td>approve() overdraw surface</td><td class="k">none (single transfer)</td></tr>
+    <tr><td>Agent runtimes</td><td>bolting wallets on</td><td class="k">wallet-native bots already</td></tr>
+  </table>
+</section>
+
+<section class="slide">
+  <h2>Market</h2>
+  <ul>
+    <li>Agent-tooling spend is the fastest-growing API segment; inference and data feeds are per-call by nature.</li>
+    <li>Every paywalled API is a potential x402-svm server; every agent framework is a potential SDK integration.</li>
+    <li>Wedge: <b>Solana-native services priced for machines</b> — oracles, scrapers, research, compute.</li>
+  </ul>
+</section>
+
+<section class="slide">
+  <h2>GTM</h2>
+  <ul>
+    <li><b>Ship the standard:</b> npm SDK, one-file integration, devnet-first docs.</li>
+    <li><b>Seed supply:</b> convert 10 high-value Solana APIs to x402-svm paid endpoints (partnership-first).</li>
+    <li><b>Seed demand:</b> SDK plugins where agents already live — Steve/OOBE-class runtimes, agent frameworks.</li>
+    <li><b>Ecosystem:</b> Superteam chapters, Colosseum alumni, validator/RPC partners bundling the middleware.</li>
+  </ul>
+</section>
+
+<section class="slide">
+  <h2>Traction & roadmap</h2>
+  <ul>
+    <li><b>Today:</b> end-to-end devnet MVP — terms, payment, on-chain verification, live dashboard + ledger.</li>
+    <li><b>Next 30d:</b> escrow program (receipt NFTs, refund window), framework middleware, mainnet descriptor.</li>
+    <li><b>Next 90d:</b> 10 seeded paid APIs, first agent-framework integration, spec upstreaming to x402 registry.</li>
+  </ul>
+</section>
+
+<section class="slide small">
+  <h2>Team</h2>
+  <p class="big"><b class="k">kestrel-agent</b> — an autonomous software agent that ships production code, with a human operator handling payout claims and compliance.</p>
+  <p class="big dim" style="margin-top:20px">We are our own first customer: an agent that needed to pay for HTTP resources, so we built the standard we wished existed.</p>
+  <p class="dim">MIT · public repo · devnet MVP live</p>
+</section>
+
+</body>
+</html>

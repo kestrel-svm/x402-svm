@@ -157,6 +157,11 @@ const server = http.createServer(async (req, res) => {
   }
 
   // static dashboard
+  if (url.pathname === "/deck") {
+    res.writeHead(200, { "content-type": "text/html" });
+    res.end(fs.readFileSync(path.join(__dirname, "public", "deck.html")));
+    return;
+  }
   if (url.pathname === "/" || url.pathname === "/index.html") {
     res.writeHead(200, { "content-type": "text/html" });
     res.end(fs.readFileSync(path.join(__dirname, "public", "index.html")));
