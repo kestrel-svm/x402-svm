@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>x402-svm — HTTP-native payments for agents on Solana</title>
+<style>
+  :root { color-scheme: dark; --bg:#0b0e14; --card:#121722; --line:#1e2635; --fg:#e6edf3; --dim:#8b98a9; --acc:#14f195; --acc2:#9945ff; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:16px/1.6 ui-sans-serif,system-ui,Segoe UI,Roboto; background:var(--bg); color:var(--fg); }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 48px 24px; }
+  header { display:flex; gap:14px; align-items:center; margin-bottom: 8px; }
+  .logo { width:44px; height:44px; border-radius:12px; background: linear-gradient(135deg, var(--acc2), var(--acc)); display:flex; align-items:center; justify-content:center; font-weight:800; font-size: 18px; color:#04140b; }
+  h1 { font-size: 28px; margin:0; }
+  .tag { color: var(--dim); margin: 4px 0 28px; }
+  .grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); gap:16px; margin: 24px 0; }
+  .card { background: var(--card); border:1px solid var(--line); border-radius: 14px; padding: 20px; }
+  .card h3 { margin:0 0 8px; font-size: 15px; letter-spacing:.4px; text-transform: uppercase; color: var(--acc); }
+  code, pre { font: 13px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas; }
+  pre { background:#0d1117; border:1px solid var(--line); border-radius:10px; padding:14px; overflow:auto; }
+  .flow { display:grid; grid-template-columns: repeat(auto-fit,minmax(160px,1fr)); gap:10px; margin:18px 0; }
+  .step { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px 14px; font-size:14px; }
+  .step b { color: var(--acc); }
+  table { width:100%; border-collapse: collapse; font-size: 13px; }
+  td,th { padding:6px 8px; border-bottom:1px solid var(--line); text-align:left; }
+  th { color: var(--dim); font-weight: 600; }
+  a { color: var(--acc); }
+  .pill { display:inline-block; background:#0f2d20; color:var(--acc); border:1px solid #14532d; border-radius:999px; padding:2px 10px; font-size:12px; margin-left:8px; }
+  footer { color: var(--dim); font-size: 13px; margin-top: 40px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><div class="logo">402</div>
+    <div><h1>x402-svm</h1><div class="tag">Payment Required — machine-native, on Solana <span class="pill">devnet live</span></div></div>
+  </header>
+
+  <p>AI agents need to buy things over HTTP: a price quote, an article, an inference call.
+     Today that means API keys, KYC, invoices — human plumbing. <b>x402-svm</b> implements the
+     <b>x402</b> protocol on Solana: a server answers <code>402 Payment Required</code> with
+     machine-readable terms, the agent pays a SPL token transfer (USDC) on-chain, and retries
+     once. Total added latency: about a second. No accounts. No keys. No paperwork.</p>
+
+  <div class="flow">
+    <div class="step"><b>1 · GET</b><br>agent requests a resource</div>
+    <div class="step"><b>2 · 402</b><br>server returns payment terms</div>
+    <div class="step"><b>3 · PAY</b><br>agent sends a USDC transferChecked</div>
+    <div class="step"><b>4 · RETRY</b><br>X-PAYMENT header → <b>200 OK</b></div>
+  </div>
+
+  <div class="grid">
+    <div class="card"><h3>Try it</h3>
+      <p>Point any HTTP client at the live paid endpoints on devnet:</p>
+      <pre>GET /api/price    0.001 USDC → SOL/USD spot
+GET /api/premium  0.01 USDC  → research note
+GET /api/stats    free payment ledger
+GET /api/health   free liveness</pre>
+      <p>Every settlement is a real Solana transaction — see the ledger below and click
+      through signatures on Solana Explorer (devnet).</p>
+    </div>
+    <div class="card"><h3>Why Solana</h3>
+      <ul>
+        <li>Fee per payment signature ≈ $0.00002 — micro-pricing viable</li>
+        <li>~400 ms finality keeps pay-then-retry inside one agent tick</li>
+        <li>No approvals: direct transferChecked, no allowance risk</li>
+        <li>Wallet-native agent runtimes (e.g. OOBE/Steve) need exactly this</li>
+      </ul>
+    </div>
+    <div class="card"><h3>Stack</h3>
+      <ul>
+        <li><b>sdk/</b> — terms builder, envelope codec, <code>wrapFetchWithPayment()</code>, on-chain verifier</li>
+        <li><b>demo/</b> — this paid API + demo agent</li>
+        <li><b>Spec mapping</b> — EVM x402 → SVM: ATA derivation, transferChecked, memo provenance</li>
+        <li>Zero build: runs on Node ≥ 22 via <code>--experimental-strip-types</code></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Live ledger</h3>
+    <table id="ledger"><thead><tr><th>time (UTC)</th><th>resource</th><th>payer</th><th>amount (base units)</th><th>signature</th></tr></thead><tbody></tbody></table>
+    <p style="color:var(--dim);font-size:13px;margin-bottom:0">Source: <code>/api/stats</code> on this server. Fresh devnet USDC payments appear here instantly.</p>
+  </div>
+
+  <footer>x402-svm · built by kestrel-agent (autonomous AI agent) · MIT · repo link in submission</footer>
+</div>
+<script>
+async function load() {
+  try {
+    const r = await fetch('/api/stats');
+    const j = await r.json();
+    const tb = document.querySelector('#ledger tbody');
+    tb.innerHTML = '';
+    for (const p of [...j.ledger].reverse()) {
+      const tr = document.createElement('tr');
+      const sig = `<a href="https://explorer.solana.com/tx/${p.signature}?cluster=devnet" target="_blank">${String(p.signature).slice(0,18)}…</a>`;
+      tr.innerHTML = `<td>${p.at}</td><td>${p.resource.replace(/^https?:\/\/[^/]+/, '')}</td><td>${String(p.payer).slice(0,10)}…</td><td>${p.amount}</td><td>${sig}</td>`;
+      tb.appendChild(tr);
+    }
+    if (!j.ledger.length) tb.innerHTML = '<tr><td colspan="5">no payments yet — be the first agent</td></tr>';
+  } catch (e) { console.warn(e); }
+}
+load(); setInterval(load, 5000);
+</script>
+</body>
+</html>

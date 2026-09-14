@@ -1,0 +1,11 @@
+{
+  "name": "x402-svm",
+  "version": "0.1.0",
+  "private": true,
+  "description": "HTTP-native (402) SPL payments for agents on Solana",
+  "license": "MIT",
+  "workspaces": [
+    "sdk",
+    "demo"
+  ]
+}
